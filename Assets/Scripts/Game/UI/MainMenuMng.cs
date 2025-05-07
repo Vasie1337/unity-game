@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class MainMenuMng
+public class MainMenuMng : MonoBehaviour
 {
     
 }
