@@ -141,8 +141,30 @@ public class WeaponController : MonoBehaviour
                 // Create hit effect at impact point
                 if (hitEffect != null)
                 {
+                    Debug.Log($"Creating hit effect at position: {hit.point}, with normal: {hit.normal}");
                     GameObject effect = Instantiate(hitEffect, hit.point, Quaternion.LookRotation(hit.normal));
+                    
+                    // Check if the instantiated effect has a ParticleSystem
+                    ParticleSystem ps = effect.GetComponent<ParticleSystem>();
+                    if (ps != null)
+                    {
+                        Debug.Log($"ParticleSystem found on hit effect. Playing: {ps.isPlaying}, Emission enabled: {ps.emission.enabled}");
+                        // Force play the particle system
+                        ps.Play();
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Hit effect prefab does not have a ParticleSystem component!");
+                    }
+                    
+                    // Add a small offset from the surface to prevent z-fighting
+                    effect.transform.position += hit.normal * 0.01f;
+                    
                     Destroy(effect, hitEffectLifetime);
+                }
+                else
+                {
+                    Debug.LogWarning("Hit effect prefab is not assigned in the inspector!");
                 }
                 
                 // Optional: Create a visible tracer line
