@@ -10,13 +10,11 @@ public class MainMenuMng : MonoBehaviour
 
     public void LoadLevel(int levelIndex)
     {
-        Debug.Log($"Level {levelIndex + 1} clicked");
         SceneManager.LoadScene($"Level{levelIndex + 1}");
     }
 
     public void OnClickExit()
     {
-        Debug.Log("Exit clicked");
         Application.Quit();
     }
 
