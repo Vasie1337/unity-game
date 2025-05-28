@@ -12,15 +12,17 @@ public class WeaponController : MonoBehaviour
     
     [Header("Recoil Settings")]
     public float recoilAmount = 0.1f;
+    public float recoilTiltAmount = 5f; // Degrees to tilt back
     public float recoilSpeed = 10f;
     public float recoilRecoverySpeed = 5f;
-    public Vector3 recoilPattern = new Vector3(-0.1f, 0.1f, 0.05f);
     
     [Header("Weapon Sway Settings")]
-    public float swayAmount = 0.02f;
-    public float swayMaxAmount = 0.06f;
+    public float lookSwayAmount = 0.02f;
+    public float lookSwayMaxAmount = 0.06f;
+    public float lookRotationSwayAmount = 1f;
+    public float movementSwayAmount = 0.02f;
+    public float movementSwaySpeed = 2f;
     public float swaySmoothness = 6f;
-    public float rotationSwayAmount = 1f;
     
     [Header("Audio")]
     public AudioSource audioSource;
@@ -36,12 +38,12 @@ public class WeaponController : MonoBehaviour
     private bool isReloading = false;
     private Vector3 initialPosition;
     private Quaternion initialRotation;
-    private Vector3 currentRecoil;
-    private Vector3 targetRecoil;
+    private Vector3 currentRecoilPosition;
+    private Vector3 currentRecoilRotation;
     
     // References
-    private Camera playerCamera;
-    private CameraController cameraController;
+    private Movement playerMovement;
+    private Rigidbody playerRigidbody;
     
     void Start()
     {
@@ -49,10 +51,11 @@ public class WeaponController : MonoBehaviour
         initialPosition = transform.localPosition;
         initialRotation = transform.localRotation;
         
-        playerCamera = Camera.main;
-        if (playerCamera != null)
+        // Find player movement component
+        playerMovement = GetComponentInParent<Movement>();
+        if (playerMovement != null)
         {
-            cameraController = playerCamera.GetComponent<CameraController>();
+            playerRigidbody = playerMovement.GetComponent<Rigidbody>();
         }
         
         if (audioSource == null)
@@ -68,6 +71,11 @@ public class WeaponController : MonoBehaviour
             
         HandleShooting();
         HandleReload();
+    }
+    
+    void LateUpdate()
+    {
+        // Apply sway and recoil in LateUpdate to ensure smooth movement
         HandleWeaponSway();
         HandleRecoil();
     }
@@ -106,12 +114,9 @@ public class WeaponController : MonoBehaviour
             }
         }
         
-        // Apply recoil
-        targetRecoil += new Vector3(
-            Random.Range(-recoilPattern.x, recoilPattern.x),
-            Random.Range(0, recoilPattern.y),
-            Random.Range(-recoilPattern.z, recoilPattern.z)
-        ) * recoilAmount;
+        // Apply recoil to weapon only
+        currentRecoilPosition.z -= recoilAmount; // Pull back
+        currentRecoilRotation.x -= recoilTiltAmount; // Tilt up
         
         // Effects
         if (muzzleFlash != null)
@@ -150,57 +155,60 @@ public class WeaponController : MonoBehaviour
     
     void HandleWeaponSway()
     {
-        if (cameraController == null)
-            return;
-            
-        // Get mouse input
-        float mouseX = Input.GetAxis("Mouse X") * swayAmount;
-        float mouseY = Input.GetAxis("Mouse Y") * swayAmount;
+        // Look sway (from mouse input)
+        float mouseX = Input.GetAxis("Mouse X") * lookSwayAmount;
+        float mouseY = Input.GetAxis("Mouse Y") * lookSwayAmount;
         
-        // Clamp sway
-        mouseX = Mathf.Clamp(mouseX, -swayMaxAmount, swayMaxAmount);
-        mouseY = Mathf.Clamp(mouseY, -swayMaxAmount, swayMaxAmount);
+        // Clamp look sway
+        mouseX = Mathf.Clamp(mouseX, -lookSwayMaxAmount, lookSwayMaxAmount);
+        mouseY = Mathf.Clamp(mouseY, -lookSwayMaxAmount, lookSwayMaxAmount);
         
-        // Calculate target position
-        Vector3 targetPosition = new Vector3(-mouseX, -mouseY, 0);
-        
-        // Calculate target rotation
-        Quaternion targetRotation = Quaternion.Euler(
-            mouseY * rotationSwayAmount,
-            mouseX * rotationSwayAmount,
-            mouseX * rotationSwayAmount * 0.5f
+        // Calculate look sway position and rotation
+        Vector3 lookSwayPosition = new Vector3(-mouseX, -mouseY, 0);
+        Quaternion lookSwayRotation = Quaternion.Euler(
+            mouseY * lookRotationSwayAmount,
+            mouseX * lookRotationSwayAmount,
+            mouseX * lookRotationSwayAmount * 0.5f
         );
+        
+        // Movement sway (from player velocity)
+        Vector3 movementSway = Vector3.zero;
+        if (playerRigidbody != null)
+        {
+            Vector3 localVelocity = transform.InverseTransformDirection(playerRigidbody.linearVelocity);
+            
+            // Side-to-side sway from strafing
+            movementSway.x = Mathf.Sin(Time.time * movementSwaySpeed) * localVelocity.x * movementSwayAmount;
+            
+            // Up-down bob from forward/backward movement
+            movementSway.y = Mathf.Sin(Time.time * movementSwaySpeed * 2f) * Mathf.Abs(localVelocity.z) * movementSwayAmount;
+        }
+        
+        // Combine all position offsets
+        Vector3 targetPosition = initialPosition + lookSwayPosition + movementSway + currentRecoilPosition;
+        
+        // Combine all rotations
+        Quaternion targetRotation = initialRotation * lookSwayRotation * Quaternion.Euler(currentRecoilRotation);
         
         // Apply sway smoothly
         transform.localPosition = Vector3.Lerp(
             transform.localPosition,
-            initialPosition + targetPosition + currentRecoil,
+            targetPosition,
             Time.deltaTime * swaySmoothness
         );
         
         transform.localRotation = Quaternion.Lerp(
             transform.localRotation,
-            initialRotation * targetRotation,
+            targetRotation,
             Time.deltaTime * swaySmoothness
         );
     }
     
     void HandleRecoil()
     {
-        // Apply recoil
-        currentRecoil = Vector3.Lerp(currentRecoil, targetRecoil, Time.deltaTime * recoilSpeed);
-        
         // Recover from recoil
-        targetRecoil = Vector3.Lerp(targetRecoil, Vector3.zero, Time.deltaTime * recoilRecoverySpeed);
-        
-        // Apply recoil to camera if available
-        if (cameraController != null && playerCamera != null)
-        {
-            float recoilX = -currentRecoil.y * 20f; // Vertical recoil
-            float recoilY = currentRecoil.x * 20f;  // Horizontal recoil
-            
-            playerCamera.transform.localRotation *= Quaternion.Euler(recoilX * Time.deltaTime, recoilY * Time.deltaTime, 0);
-        }
+        currentRecoilPosition = Vector3.Lerp(currentRecoilPosition, Vector3.zero, Time.deltaTime * recoilRecoverySpeed);
+        currentRecoilRotation = Vector3.Lerp(currentRecoilRotation, Vector3.zero, Time.deltaTime * recoilRecoverySpeed);
     }
     
     void OnGUI()
