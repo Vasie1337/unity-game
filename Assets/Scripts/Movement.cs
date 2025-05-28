@@ -5,159 +5,206 @@ using UnityEngine;
 public class Movement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float walkSpeed = 6f;
-    public float runSpeed = 12f;
-    public float jumpForce = 8f;
-    public float airMultiplier = 0.4f;
-    public float groundDrag = 5f;
-    public float airDrag = 1f;
+    public float moveSpeed = 20f;
+    public float sprintSpeed = 30f;
+    public float groundAcceleration = 15f;
+    public float groundDeceleration = 15f;
+    public float airAcceleration = 8f;
+    public float airDeceleration = 2f;
+    public float maxVelocity = 35f;
+    public float friction = 10f;
+
+    [Header("Jump Settings")]
+    public float jumpHeight = 3f;
+    public float jumpCooldown = 0.2f;
+    public float gravityScale = 3f;
+    public float fallMultiplier = 1.5f;
 
     [Header("Ground Check")]
-    public float playerHeight = 2f;
-    public LayerMask groundMask = 1;
-    public float groundCheckDistance = 0.4f;
-
-    [Header("Slope Handling")]
-    public float maxSlopeAngle = 40f;
+    public float groundCheckRadius = 0.3f;
+    public LayerMask groundLayer = -1;
+    public float groundCheckOffset = 0.1f;
 
     [Header("Input")]
     public KeyCode jumpKey = KeyCode.Space;
-    public KeyCode runKey = KeyCode.LeftShift;
+    public KeyCode sprintKey = KeyCode.LeftShift;
 
-    // Private variables
+    // Components
     private Rigidbody rb;
-    private float horizontalInput;
-    private float verticalInput;
-    private Vector3 moveDirection;
-    private bool grounded;
-    private bool readyToJump = true;
-    private float jumpCooldown = 0.25f;
+    private CapsuleCollider col;
 
-    private RaycastHit slopeHit;
-    private bool exitingSlope;
+    // State
+    private Vector3 moveInput;
+    private bool isGrounded;
+    private bool canJump = true;
+    private float currentSpeed;
+
+    // Ground check
+    private Vector3 groundCheckPos;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        col = GetComponent<CapsuleCollider>();
+        
+        // Configure rigidbody for responsive movement
         rb.freezeRotation = true;
-
-        CapsuleCollider capsule = GetComponent<CapsuleCollider>();
-        capsule.height = playerHeight;
-        capsule.center = new Vector3(0, playerHeight / 2, 0);
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        
+        // Set custom gravity
+        Physics.gravity = new Vector3(0, -9.81f * gravityScale, 0);
     }
 
     void Update()
     {
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + groundCheckDistance, groundMask);
-
-        GetInput();
-
-        HandleDrag();
-
-        if (Input.GetKey(jumpKey) && readyToJump && grounded)
+        // Get input
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        
+        // Calculate move direction relative to camera
+        Transform cam = Camera.main.transform;
+        Vector3 forward = cam.forward;
+        Vector3 right = cam.right;
+        
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
+        
+        moveInput = (forward * vertical + right * horizontal).normalized;
+        
+        // Sprint check
+        currentSpeed = Input.GetKey(sprintKey) ? sprintSpeed : moveSpeed;
+        
+        // Jump
+        if (Input.GetKeyDown(jumpKey) && isGrounded && canJump)
         {
-            readyToJump = false;
             Jump();
-            Invoke(nameof(ResetJump), jumpCooldown);
         }
     }
 
     void FixedUpdate()
     {
-        MovePlayer();
+        CheckGround();
+        ApplyMovement();
+        ApplyFriction();
+        ControlVelocity();
+        ApplyGravity();
     }
 
-    void GetInput()
+    void CheckGround()
     {
-        horizontalInput = Input.GetAxisRaw("Horizontal");
-        verticalInput = Input.GetAxisRaw("Vertical");
+        // Calculate ground check position
+        float offset = col.height / 2f - col.radius + groundCheckOffset;
+        groundCheckPos = transform.position + Vector3.down * offset;
+        
+        // Perform ground check
+        isGrounded = Physics.CheckSphere(groundCheckPos, groundCheckRadius, groundLayer);
     }
 
-    void HandleDrag()
+    void ApplyMovement()
     {
-        if (grounded)
-            rb.linearDamping = groundDrag;
-        else
-            rb.linearDamping = airDrag;
+        // Get current velocity
+        Vector3 velocity = rb.linearVelocity;
+        Vector3 horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
+        
+        // Calculate desired velocity
+        Vector3 targetVelocity = moveInput * currentSpeed;
+        
+        // Calculate velocity difference
+        Vector3 velocityDiff = targetVelocity - horizontalVelocity;
+        
+        // Calculate acceleration
+        float accel = isGrounded ? groundAcceleration : airAcceleration;
+        float decel = isGrounded ? groundDeceleration : airDeceleration;
+        
+        // Apply acceleration or deceleration
+        float acceleration = (Vector3.Dot(horizontalVelocity, targetVelocity) > 0) ? accel : decel;
+        
+        // Calculate force
+        Vector3 moveForce = velocityDiff * acceleration;
+        
+        // Apply force
+        rb.AddForce(moveForce, ForceMode.Force);
     }
 
-    void MovePlayer()
+    void ApplyFriction()
     {
-        Transform camTransform = Camera.main.transform;
-        Vector3 forward = camTransform.forward;
-        Vector3 right = camTransform.right;
-
-        forward.y = 0f;
-        right.y = 0f;
-        forward.Normalize();
-        right.Normalize();
-
-        moveDirection = forward * verticalInput + right * horizontalInput;
-
-        if (OnSlope() && !exitingSlope)
+        // Only apply friction when grounded and not moving
+        if (isGrounded && moveInput.magnitude < 0.01f)
         {
-            rb.AddForce(GetSlopeMoveDirection(moveDirection) * GetCurrentSpeed() * 20f, ForceMode.Force);
-
-            if (rb.linearVelocity.y > 0)
-                rb.AddForce(Vector3.down * 80f, ForceMode.Force);
+            Vector3 velocity = rb.linearVelocity;
+            Vector3 horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
+            
+            // Apply friction force
+            Vector3 frictionForce = -horizontalVelocity * friction;
+            rb.AddForce(frictionForce, ForceMode.Force);
         }
-        else if (grounded)
-        {
-            rb.AddForce(moveDirection.normalized * GetCurrentSpeed() * 10f, ForceMode.Force);
-        }
-        else
-        {
-            rb.AddForce(moveDirection.normalized * GetCurrentSpeed() * 10f * airMultiplier, ForceMode.Force);
-        }
-
-        rb.useGravity = !OnSlope();
     }
 
-    float GetCurrentSpeed()
+    void ControlVelocity()
     {
-        if (Input.GetKey(runKey) && grounded)
-            return runSpeed;
-        else
-            return walkSpeed;
+        // Limit horizontal velocity
+        Vector3 velocity = rb.linearVelocity;
+        Vector3 horizontalVelocity = new Vector3(velocity.x, 0, velocity.z);
+        
+        if (horizontalVelocity.magnitude > maxVelocity)
+        {
+            horizontalVelocity = horizontalVelocity.normalized * maxVelocity;
+            rb.linearVelocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
+        }
+    }
+
+    void ApplyGravity()
+    {
+        // Apply extra gravity when falling for better game feel
+        if (rb.linearVelocity.y < 0 && !isGrounded)
+        {
+            rb.AddForce(Vector3.down * fallMultiplier * 10f, ForceMode.Force);
+        }
     }
 
     void Jump()
     {
-        exitingSlope = true;
-
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        // Reset vertical velocity
+        Vector3 velocity = rb.linearVelocity;
+        velocity.y = 0f;
+        rb.linearVelocity = velocity;
+        
+        // Calculate jump velocity using physics formula: v = sqrt(2 * g * h)
+        float jumpVelocity = Mathf.Sqrt(2f * Mathf.Abs(Physics.gravity.y) * jumpHeight);
+        
+        // Apply jump impulse
+        rb.AddForce(Vector3.up * jumpVelocity, ForceMode.VelocityChange);
+        
+        // Start jump cooldown
+        canJump = false;
+        Invoke(nameof(ResetJump), jumpCooldown);
     }
 
     void ResetJump()
     {
-        readyToJump = true;
-        exitingSlope = false;
-    }
-
-    bool OnSlope()
-    {
-        if (Physics.Raycast(transform.position, Vector3.down, out slopeHit, playerHeight * 0.5f + 0.3f))
-        {
-            float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
-            return angle < maxSlopeAngle && angle != 0;
-        }
-
-        return false;
-    }
-
-    Vector3 GetSlopeMoveDirection(Vector3 direction)
-    {
-        return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
+        canJump = true;
     }
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = grounded ? Color.green : Color.red;
-        Gizmos.DrawRay(transform.position, Vector3.down * (playerHeight * 0.5f + groundCheckDistance));
-
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(transform.position + Vector3.up * playerHeight / 2, new Vector3(1f, playerHeight, 1f));
+        // Initialize components if needed
+        if (col == null) col = GetComponent<CapsuleCollider>();
+        
+        // Draw ground check sphere
+        float offset = col.height / 2f - col.radius + groundCheckOffset;
+        Vector3 checkPos = transform.position + Vector3.down * offset;
+        
+        Gizmos.color = isGrounded ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(checkPos, groundCheckRadius);
+        
+        // Draw velocity vector
+        if (Application.isPlaying)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(transform.position, rb.linearVelocity * 0.1f);
+        }
     }
 }
