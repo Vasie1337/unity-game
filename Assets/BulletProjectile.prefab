@@ -100,9 +100,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 10
-  lifeTime: 5
+  lifeTime: 10.87
   impactForce: 30
   impactEffect: {fileID: 0}
   impactEffectLifetime: 2
   useTrail: 1
-  trailTime: 0.1
+  trailTime: 0.13
