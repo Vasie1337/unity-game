@@ -19,7 +19,7 @@ public class Enemy : MonoBehaviour
     
     [Header("Targeting")]
     public LayerMask obstacleLayer = -1;
-    public float targetingHeight = 1.5f; // Height offset for aiming at player center
+    public float targetingHeight = 1.5f;
     
     [Header("Visual Feedback")]
     public Renderer enemyRenderer;
