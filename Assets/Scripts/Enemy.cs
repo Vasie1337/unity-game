@@ -95,10 +95,6 @@ public class Enemy : MonoBehaviour
                 if (!isAlerted)
                 {
                     isAlerted = true;
-                    if (enemyRenderer != null)
-                    {
-                        enemyRenderer.material.color = alertColor;
-                    }
                 }
                 
                 // Rotate to face player
@@ -123,10 +119,6 @@ public class Enemy : MonoBehaviour
                 if (isAlerted)
                 {
                     isAlerted = false;
-                    if (enemyRenderer != null)
-                    {
-                        enemyRenderer.material.color = normalColor;
-                    }
                 }
             }
         }
@@ -136,10 +128,6 @@ public class Enemy : MonoBehaviour
             if (isAlerted)
             {
                 isAlerted = false;
-                if (enemyRenderer != null)
-                {
-                    enemyRenderer.material.color = normalColor;
-                }
             }
         }
     }
