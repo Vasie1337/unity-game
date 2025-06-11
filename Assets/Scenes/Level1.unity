@@ -6834,7 +6834,7 @@ Mesh:
     serializedVersion: 2
     offset: 0
     size: 0
-    path:
+    path: 
 --- !u!1 &813306245
 GameObject:
   m_ObjectHideFlags: 0
@@ -9718,6 +9718,11 @@ Mesh:
     offset: 0
     size: 0
     path: 
+--- !u!4 &1189993239 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
+  m_PrefabInstance: {fileID: 487497407}
+  m_PrefabAsset: {fileID: 0}
 --- !u!43 &1200691322
 Mesh:
   m_ObjectHideFlags: 0
@@ -10240,6 +10245,11 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!4 &1260619221 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
+  m_PrefabInstance: {fileID: 91732092}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1285159491
 GameObject:
   m_ObjectHideFlags: 0
@@ -15012,13 +15022,7 @@ PrefabInstance:
       addedObject: {fileID: 1881967379}
     - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 967359787}
-    - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1791052466}
-    - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 811598607}
     - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1047454839}
@@ -15028,6 +15032,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 614456483}
+    - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1260619221}
+    - targetCorrespondingSourceObject: {fileID: 7779793561072011699, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1189993239}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0df2d451fc694a14c8d8d81f3c26219c, type: 3}
 --- !u!43 &1729527014
@@ -18810,18 +18820,7 @@ SceneRoots:
   - {fileID: 6624971394962512577}
   - {fileID: 1992307785}
   - {fileID: 1721385707}
-  - {fileID: 1734478948}
-  - {fileID: 1502134380}
-  - {fileID: 1515880434}
-  - {fileID: 1658228620}
-  - {fileID: 166655094}
-  - {fileID: 1618769312}
-  - {fileID: 91732092}
-  - {fileID: 219990526}
-  - {fileID: 487497407}
-  - {fileID: 1622195137}
-  - {fileID: 1492783906}
-  - {fileID: 196306486}
   - {fileID: 6478229864639171829}
   - {fileID: 372754158}
   - {fileID: 935167405}
+  - {fileID: 270248023}
