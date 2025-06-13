@@ -61,6 +61,7 @@ public class WeaponController : MonoBehaviour
     // References
     private Movement playerMovement;
     private Rigidbody playerRigidbody;
+    private Camera playerCamera;
     
     void Start()
     {
@@ -73,6 +74,13 @@ public class WeaponController : MonoBehaviour
         if (playerMovement != null)
         {
             playerRigidbody = playerMovement.GetComponent<Rigidbody>();
+        }
+        
+        // Find the camera (usually tagged as MainCamera or find it by component)
+        playerCamera = Camera.main;
+        if (playerCamera == null)
+        {
+            playerCamera = FindObjectOfType<Camera>();
         }
         
         if (audioSource == null)
@@ -110,18 +118,24 @@ public class WeaponController : MonoBehaviour
     {
         currentAmmo--;
         
-        // Perform raycast
-        if (firePoint != null)
+        // Cast ray from camera center for accurate targeting
+        if (playerCamera != null && firePoint != null)
         {
             RaycastHit hit;
-            Vector3 rayOrigin = firePoint.position;
-            Vector3 rayDirection = firePoint.forward;
+            Vector3 cameraCenter = playerCamera.transform.position;
+            Vector3 cameraDirection = playerCamera.transform.forward;
             
-            // Draw debug ray
-            Debug.DrawRay(rayOrigin, rayDirection * range, Color.red, 0.1f);
+            // Draw debug ray from camera
+            Debug.DrawRay(cameraCenter, cameraDirection * range, Color.blue, 0.1f);
             
-            if (Physics.Raycast(rayOrigin, rayDirection, out hit, range))
+            Vector3 targetPoint;
+            bool hitSomething = false;
+            
+            if (Physics.Raycast(cameraCenter, cameraDirection, out hit, range))
             {
+                targetPoint = hit.point;
+                hitSomething = true;
+                
                 Debug.Log($"Hit: {hit.collider.name} at distance: {hit.distance}");
                 
                 // Apply damage to damageable objects
@@ -135,7 +149,7 @@ public class WeaponController : MonoBehaviour
                 Rigidbody rb = hit.collider.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
-                    rb.AddForceAtPosition(rayDirection * impactForce, hit.point, ForceMode.Impulse);
+                    rb.AddForceAtPosition(cameraDirection * impactForce, hit.point, ForceMode.Impulse);
                 }
                 
                 // Create hit effect at impact point
@@ -166,15 +180,15 @@ public class WeaponController : MonoBehaviour
                 {
                     Debug.LogWarning("Hit effect prefab is not assigned in the inspector!");
                 }
-                
-                // Optional: Create a visible tracer line
-                CreateTracerLine(rayOrigin, hit.point);
             }
             else
             {
-                // No hit - create tracer to max range
-                CreateTracerLine(rayOrigin, rayOrigin + rayDirection * range);
+                // No hit - target point is at max range from camera
+                targetPoint = cameraCenter + cameraDirection * range;
             }
+            
+            // Create tracer line from gun's fire point to the target point
+            CreateTracerLine(firePoint.position, targetPoint);
         }
         
         // Apply recoil to weapon only
