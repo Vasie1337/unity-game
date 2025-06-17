@@ -33,14 +33,6 @@ public class WeaponController : MonoBehaviour
     public float reloadSpinSpeed = 720f; // Degrees per second (2 full rotations per second)
     public bool spinDuringReload = true;
     
-    [Header("Audio")]
-    public AudioSource audioSource;
-    public AudioClip fireSound;
-    public AudioClip reloadSound;
-    
-    [Header("Effects")]
-    public ParticleSystem muzzleFlash;
-    
     [Header("Crosshair Settings")]
     public bool showCrosshair = true;
     public Color crosshairColor = new Color(1f, 1f, 1f, 0.8f);
@@ -195,16 +187,6 @@ public class WeaponController : MonoBehaviour
         currentRecoilPosition.z -= recoilAmount; // Pull back
         currentRecoilRotation.x -= recoilTiltAmount; // Tilt up
         
-        // Effects
-        if (muzzleFlash != null)
-        {
-            muzzleFlash.Play();
-        }
-        
-        if (audioSource != null && fireSound != null)
-        {
-            audioSource.PlayOneShot(fireSound);
-        }
     }
     
     void CreateTracerLine(Vector3 start, Vector3 end)
@@ -247,11 +229,6 @@ public class WeaponController : MonoBehaviour
     {
         isReloading = true;
         currentReloadRotation = 0f;
-        
-        if (audioSource != null && reloadSound != null)
-        {
-            audioSource.PlayOneShot(reloadSound);
-        }
         
         float elapsedTime = 0f;
         
@@ -333,37 +310,26 @@ public class WeaponController : MonoBehaviour
         currentRecoilRotation = Vector3.Lerp(currentRecoilRotation, Vector3.zero, Time.deltaTime * recoilRecoverySpeed);
     }
 
-    // Simple crosshair
     void OnGUI()
     {
-        // Draw a simple crosshair
         if (!showCrosshair)
             return;
             
-        // Get screen center
         float centerX = Screen.width / 2f;
         float centerY = Screen.height / 2f;
         
-        // Set GUI color
         GUI.color = crosshairColor;
         
-        // Draw horizontal lines (left and right)
         GUI.DrawTexture(new Rect(centerX - crosshairSize - crosshairGap, centerY - crosshairThickness / 2f, crosshairSize, crosshairThickness), Texture2D.whiteTexture);
         GUI.DrawTexture(new Rect(centerX + crosshairGap, centerY - crosshairThickness / 2f, crosshairSize, crosshairThickness), Texture2D.whiteTexture);
         
-        // Draw vertical lines (top and bottom)
         GUI.DrawTexture(new Rect(centerX - crosshairThickness / 2f, centerY - crosshairSize - crosshairGap, crosshairThickness, crosshairSize), Texture2D.whiteTexture);
         GUI.DrawTexture(new Rect(centerX - crosshairThickness / 2f, centerY + crosshairGap, crosshairThickness, crosshairSize), Texture2D.whiteTexture);
         
-        // Optional: Draw center dot
-        // GUI.DrawTexture(new Rect(centerX - 1f, centerY - 1f, 2f, 2f), Texture2D.whiteTexture);
-        
-        // Reset GUI color
         GUI.color = Color.white;
     }
 } 
 
-// Simple damage interface
 public interface IDamageable
 {
     void TakeDamage(float damage);
