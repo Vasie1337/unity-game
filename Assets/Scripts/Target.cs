@@ -3,18 +3,18 @@ using UnityEngine;
 public class Target : MonoBehaviour, IDamageable
 {
     [Header("Target Settings")]
-    public float maxHealth = 100f;
+    public float maxHealth = 30f;
     public float currentHealth;
     
     [Header("Visual Feedback")]
-    public Renderer targetRenderer;
-    public Color damageColor = Color.red;
-    public float colorChangeDuration = 0.1f;
+    private Renderer targetRenderer;
+    private Color damageColor = Color.blue;
+    private float colorChangeDuration = 0.2f;
     
     [Header("Death Effects")]
     public GameObject deathEffect;
-    public float deathEffectDuration = 2f;
-    public bool destroyOnDeath = true;
+    private float deathEffectDuration = 2f;
+    private bool destroyOnDeath = true;
     
     private Color originalColor;
     private float colorChangeTimer = 0f;
@@ -36,7 +36,6 @@ public class Target : MonoBehaviour, IDamageable
     
     void Update()
     {
-        // Handle damage color feedback
         if (colorChangeTimer > 0)
         {
             colorChangeTimer -= Time.deltaTime;
@@ -52,14 +51,12 @@ public class Target : MonoBehaviour, IDamageable
     {
         currentHealth -= damage;
         
-        // Visual feedback
         if (targetRenderer != null)
         {
             targetRenderer.material.color = damageColor;
             colorChangeTimer = colorChangeDuration;
         }
         
-        // Check if dead
         if (currentHealth <= 0)
         {
             Die();
@@ -68,14 +65,12 @@ public class Target : MonoBehaviour, IDamageable
     
     void Die()
     {
-        // Create death effect
         if (deathEffect != null)
         {
             GameObject effect = Instantiate(deathEffect, transform.position, transform.rotation);
             Destroy(effect, deathEffectDuration);
         }
         
-        // Destroy or disable
         if (destroyOnDeath)
         {
             Destroy(gameObject);
@@ -83,20 +78,6 @@ public class Target : MonoBehaviour, IDamageable
         else
         {
             gameObject.SetActive(false);
-        }
-    }
-    
-    public void Heal(float amount)
-    {
-        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
-    }
-    
-    public void ResetHealth()
-    {
-        currentHealth = maxHealth;
-        if (!gameObject.activeSelf)
-        {
-            gameObject.SetActive(true);
         }
     }
 } 
