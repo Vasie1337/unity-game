@@ -34107,7 +34107,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dea6e5d07eebb4b4599492005f9e6ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jumpForce: 40
+  jumpForce: 32
   useVelocityChange: 1
   resetVerticalVelocity: 1
   jumpEffect: {fileID: 0}

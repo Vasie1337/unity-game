@@ -160,11 +160,11 @@ MonoBehaviour:
   moveSpeed: 3
   rotationSpeed: 5
   detectionRange: 20
-  attackRange: 15
+  attackRange: 30
   fireRate: 1
   bulletPrefab: {fileID: 2888988662767014339, guid: ea62355c3afe6a64e8090fd718f02dde, type: 3}
-  firePoint: {fileID: 999329725326645275}
-  bulletSpeed: 20
+  firePoint: {fileID: 0}
+  bulletSpeed: 25
   bulletDamage: 10
   bulletLifetime: 5
   obstacleLayer:
@@ -174,8 +174,6 @@ MonoBehaviour:
   enemyRenderer: {fileID: 0}
   alertColor: {r: 1, g: 0, b: 0, a: 1}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
-  audioSource: {fileID: 0}
-  shootSound: {fileID: 0}
 --- !u!114 &1158617150252706973
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -188,11 +186,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5d56e2cad4694a4ea6f65d5d0035e24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 30
   currentHealth: 0
-  targetRenderer: {fileID: 0}
-  damageColor: {r: 0, g: 0.052033424, b: 1, a: 1}
-  colorChangeDuration: 0.1
   deathEffect: {fileID: 1329845292236604, guid: 9bba9cf244c53c5439505dfc96fdd11c, type: 3}
-  deathEffectDuration: 2
-  destroyOnDeath: 1

@@ -62,7 +62,7 @@ MonoBehaviour:
   groundCheckRadius: 0.3
   groundLayer:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 64
   groundCheckOffset: 0.1
   jumpKey: 32
   sprintKey: 304
@@ -86,9 +86,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
-  m_Height: 1
+  m_Height: 2.7373831
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.86869156, z: 0}
 --- !u!54 &76654612524229442
 Rigidbody:
   m_ObjectHideFlags: 0
